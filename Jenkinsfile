@@ -63,8 +63,8 @@ pipeline {
                       filename=\$(basename "\$file" .json)
                       apictl init apis-temp/\$filename --oas "\$file" --verbose
                       
-                      prod=\$(jq -r --arg api "\$name" '.[\$api].production' \$ENDPOINT_FILE)
-                      sandbox=\$(jq -r --arg api "\$name" '.[\$api].sandbox' \$ENDPOINT_FILE)
+                      #prod=\$(jq -r --arg api "\$name" '.[\$api].production' \$ENDPOINT_FILE)
+                      #sandbox=\$(jq -r --arg api "\$name" '.[\$api].sandbox' \$ENDPOINT_FILE)
                       
                       apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV}  --insecure --update --verbose
                     fi
