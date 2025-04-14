@@ -40,8 +40,8 @@ pipeline {
 
                     withCredentials([usernamePassword(credentialsId: selectedCredsId, usernameVariable: 'WSO2_USERNAME', passwordVariable: 'WSO2_PASSWORD')]) {
                         sh """
-                        apictl remove-env ${params.TARGET_ENV} || true
-                        apictl add-env -e ${params.TARGET_ENV} --apim ${env.apim} --admin ${env.admin}
+                        apictl remove env ${params.TARGET_ENV} || true
+                        apictl add env ${params.TARGET_ENV} --apim ${env.apim} --admin ${env.admin}
                         apictl login ${params.TARGET_ENV} -u $WSO2_USERNAME -p $WSO2_PASSWORD --insecure --verbose
                         """
                     }
