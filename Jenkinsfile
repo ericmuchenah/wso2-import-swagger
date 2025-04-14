@@ -32,16 +32,16 @@ pipeline {
                     def selectedCredsId = credsMap[params.TARGET_ENV]
 
                     def envMap = [
-                        dev : [publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
-                        test: [publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
-                        prod: [publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin']
+                        dev : [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
+                        test: [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
+                        prod: [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin']
                     ]
                     def env = envMap[params.TARGET_ENV]
 
                     withCredentials([usernamePassword(credentialsId: selectedCredsId, usernameVariable: 'WSO2_USERNAME', passwordVariable: 'WSO2_PASSWORD')]) {
                         sh """
                         apictl remove-env ${params.TARGET_ENV} || true
-                        apictl add-env -e ${params.TARGET_ENV} --apim ${env.publisher} --admin ${env.admin}
+                        apictl add-env -e ${params.TARGET_ENV} --apim ${env.apim} --admin ${env.admin}
                         apictl login ${params.TARGET_ENV} -u $WSO2_USERNAME -p $WSO2_PASSWORD --insecure --verbose
                         """
                     }
