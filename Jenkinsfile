@@ -61,9 +61,10 @@ pipeline {
                       echo "Processing \$file"
                       filename=\$(basename "\$file" .json)
                       apictl init apis-temp/\$filename --oas "\$file" --verbose
-                      apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV} --update --verbose
+                      apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV}  --insecure --update --verbose
                     fi
                   done
+                  apictl logout ${params.TARGET_ENV} --insecure
                 else
                   echo "Folder '${env.SWAGGER_PATH}' does not exist. Skipping API import."
                   exit 1
