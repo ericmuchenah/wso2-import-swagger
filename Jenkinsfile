@@ -52,12 +52,6 @@ pipeline {
 
         stage('Import All Swagger APIs') {
             steps {
-                def endpointsMap = [
-                        dev : [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
-                        test: [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
-                        prod: [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin']
-                    ]
-                    def env = envMap[params.TARGET_ENV]
                 sh """
                 mkdir -p apis-temp
                 rm -rf apis-temp/*
