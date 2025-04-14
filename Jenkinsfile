@@ -66,17 +66,6 @@ pipeline {
                       prod=\$(jq -r --arg api "\$name" '.[\$api].production' \$ENDPOINT_FILE)
                       sandbox=\$(jq -r --arg api "\$name" '.[\$api].sandbox' \$ENDPOINT_FILE)
                       
-                      cat > apis-temp/\$name/api_params.yaml <<EOF
-                    environments:
-                      - name: \${params.TARGET_ENV}
-                        endpoints:
-                          production:
-                            url: "\$prod"
-                          sandbox:
-                            url: "\$sandbox"
-                    EOF
-
-
                       apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV}  --insecure --update --verbose
                     fi
                   done
