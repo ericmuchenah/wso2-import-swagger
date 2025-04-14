@@ -55,12 +55,20 @@ pipeline {
                 mkdir -p apis-temp
                 rm -rf apis-temp/*
 
-                for file in ${env.SWAGGER_PATH}/*.json; do
-                  echo "Processing \$file"
-                  filename=\$(basename "\$file" .json)
-                  apictl init apis-temp/\$filename --oas \$file --verbose
-                  apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV} --update --verbose
-                done
+                if [ -d "${env.SWAGGER_PATH}" ]; then
+                  for file in ${env.SWAGGER_PATH}/*.json; do
+                    if [ -f "\$file" ]; then
+                      echo "Processing \$file"
+                      filename=\$(basename "\$file" .json)
+                      apictl init apis-temp/\$filename --oas "\$file" --verbose
+                      apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV} --update --verbose
+                    fi
+                  done
+                else
+                  echo "Folder '${env.SWAGGER_PATH}' does not exist. Skipping API import."
+                  exit 1
+                fi
+
                 """
             }
         }
