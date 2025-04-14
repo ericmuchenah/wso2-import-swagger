@@ -9,6 +9,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/ericmuchenah/wso2-import-swagger.git'
         SWAGGER_PATH = 'swagger-definitions'
+        ENDPOINT_FILE = "endpoints.${params.TARGET_ENV}.json"
     }
 
     stages {
@@ -49,8 +50,14 @@ pipeline {
             }
         }
 
-        stage('Import All APIs') {
+        stage('Import All Swagger APIs') {
             steps {
+                def endpointsMap = [
+                        dev : [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
+                        test: [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
+                        prod: [apim: 'https://localhost:9443', publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin']
+                    ]
+                    def env = envMap[params.TARGET_ENV]
                 sh """
                 mkdir -p apis-temp
                 rm -rf apis-temp/*
@@ -61,6 +68,21 @@ pipeline {
                       echo "Processing \$file"
                       filename=\$(basename "\$file" .json)
                       apictl init apis-temp/\$filename --oas "\$file" --verbose
+                      
+                      prod=\$(jq -r --arg api "\$name" '.[\$api].production' $ENDPOINT_FILE)
+                      sandbox=\$(jq -r --arg api "\$name" '.[\$api].sandbox' $ENDPOINT_FILE)
+                      
+                      cat > apis-temp/$name/api_params.yaml <<EOF
+                    environments:
+                      - name: ${params.TARGET_ENV}
+                        endpoints:
+                          production:
+                            url: "\$prod"
+                          sandbox:
+                            url: "\$sandbox"
+                    EOF
+
+
                       apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV}  --insecure --update --verbose
                     fi
                   done

@@ -1,0 +1,10 @@
+{
+  "petstore": {
+    "production": "https://httpdump.app/dumps/998db871-6ed6-402c-a1d9-249bd9d6beca",
+    "sandbox": "https://sandbox.httpdump.app/dumps/998db871-6ed6-402c-a1d9-249bd9d6beca"
+  },
+  "orders": {
+    "production": "https://prod.orders.com/api",
+    "sandbox": "https://sandbox.orders.com/api"
+  }
+}
