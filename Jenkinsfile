@@ -8,8 +8,7 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/ericmuchenah/wso2-import-swagger.git'
-        SWAGGER_PATH = 'api/swagger.json' // relative path inside repo
-        API_PROJECT_NAME = 'test-api'
+        SWAGGER_PATH = 'swagger-definitions'
     }
 
     stages {
@@ -20,19 +19,48 @@ pipeline {
             }
         }
 
-        stage('Initialize API Project') {
+        
+        stage('Login to APIM') {
             steps {
-                sh """
-                rm -rf ${API_PROJECT_NAME} || true
-                apictl init ${API_PROJECT_NAME} --oas ${SWAGGER_PATH} --verbose
-                """
+                script {
+                    def credsMap = [
+                        dev : 'WSO2_CREDENTIALS',
+                        test: 'WSO2_CREDENTIALS',
+                        prod: 'WSO2_CREDENTIALS'
+                    ]
+
+                    def selectedCredsId = credsMap[params.TARGET_ENV]
+
+                    def envMap = [
+                        dev : [publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
+                        test: [publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin'],
+                        prod: [publisher: 'https://localhost:9443/publisher', admin: 'https://localhost:9443/admin']
+                    ]
+                    def env = envMap[params.TARGET_ENV]
+
+                    withCredentials([usernamePassword(credentialsId: selectedCredsId, usernameVariable: 'WSO2_USERNAME', passwordVariable: 'WSO2_PASSWORD')]) {
+                        sh """
+                        apictl remove-env ${params.TARGET_ENV} || true
+                        apictl add-env -e ${params.TARGET_ENV} --apim ${env.publisher} --admin ${env.admin}
+                        apictl login ${params.TARGET_ENV} -u $WSO2_USERNAME -p $WSO2_PASSWORD --insecure --verbose
+                        """
+                    }
+                }
             }
         }
 
-        stage('Import API to WSO2 APIM') {
+        stage('Import All APIs') {
             steps {
                 sh """
-                apictl import-api -f ${API_PROJECT_NAME} -e ${params.TARGET_ENV} --update --verbose
+                mkdir -p apis-temp
+                rm -rf apis-temp/*
+
+                for file in ${env.SWAGGER_PATH}/*.json; do
+                  echo "Processing \$file"
+                  filename=\$(basename "\$file" .json)
+                  apictl init apis-temp/\$filename --oas \$file --verbose
+                  apictl import-api -f apis-temp/\$filename -e ${params.TARGET_ENV} --update --verbose
+                done
                 """
             }
         }
@@ -40,7 +68,7 @@ pipeline {
 
     post {
         success {
-            echo 'API imported successfully!'
+            echo 'APIs imported successfully!'
         }
         failure {
             echo 'Pipeline failed. Please check logs.'
